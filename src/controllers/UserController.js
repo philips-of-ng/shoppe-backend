@@ -8,9 +8,9 @@ export const getUsers = async (request, response) => {
   try {
     console.log('I got the request');
     const users = await User.find()
-    response.json(users)
+    response.status(200).json(users)
   } catch (error) {
-
+    response.status(400).json({ message: error.message })
   }
 }
 
@@ -41,7 +41,6 @@ export const getUserByEmail = async (request, response) => {
 
 
 
-
 //CREATE A NEW USER IN THE DB
 export const createUser = async (request, response) => {
   console.log('Create user request received, here is the request body', request.body);
@@ -62,9 +61,7 @@ export const createUser = async (request, response) => {
   try {
     const newUser = await User.create(request.body);
     console.log('User created successfully:', newUser);
-    response
-      .status(201)
-      .json({ message: 'User created successfully', userDetails: newUser });
+    response.status(201).json({ message: 'User created successfully', userDetails: newUser });
   } catch (error) {
     console.error('Error creating user:', error.message);
     response.status(400).json({ message: 'Error creating user', error: error.message });
@@ -72,8 +69,21 @@ export const createUser = async (request, response) => {
 };
 
 
+export const loginUser = async (request, response) => {
+  const userCredentials = request.body
+  try {
+    const user = await User.findOne(userCredentials)
+    if (user) {
+      console.log('Access Granted', user);
+      response.status(200).json({ message: 'Access Granted', details: user })
+    }
+  } catch (error) {
+    response.status(400).json({ message: error })
+  }
+}
 
-//GENERATES OTP AND SENDS TO USER EMAIL
+
+//GENERATES OTP AND SENDS TO USER EMAIL FOR PASSWORD RESET
 export const resetPassword = async (request, response) => {
 
   console.log('Reset Password CTRLR Reached!', request.body);
