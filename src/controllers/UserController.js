@@ -1,3 +1,4 @@
+import { request, response } from 'express';
 import User from '../models/UserModel.js'
 import userSchema from '../validations/UserValidation.js'
 
@@ -68,17 +69,64 @@ export const createUser = async (request, response) => {
   }
 };
 
+const sendLoginCode = async (request, response) => {
+  const userCredentials = request.body
+
+  try {
+    const user = await User.findOne(userCredentials)
+    if (user) {
+      const email = request.body.email
+      const otp = Math.floor(100000 + Math.random() + 900000).toString()
+
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: 'edunphilips3@Gmail.com',
+          pass: 'aukxagjlspshtbki'
+        },
+        tls: {
+          rejectUnauthorized: false
+        }
+      })
+
+      const currentTime = new Date().toLocaleTimeString()
+
+      const mailConfig = {
+        from: 'philipsedun@gmail.com',
+        to: email,
+        subject: 'Shoppe Login Code',
+        text: `Your login code, requested as at ${currentTime} is ${otp}. If you didn't request this OTP, please ignore this message.`
+      }
+
+      const mailResponse = await transporter.sendMail(mailConfig)
+        console.log(mailResponse);
+        if (mailResponse.accepted[0]) {
+          console.log('Mail sent successfully.');
+          response.status(200).json({ message: 'Mail Sent Successfully.', otp: otp })
+        } else if (!mailResponse.accepted[0] || mailResponse.rejected[0]) {
+          response.status(400).json({ message: 'Mail Rejected' })
+        }
+    }
+  } catch (error) {
+    console.log('Error trying to login with Login Code', error);
+    response.status(400).json({ message: error })
+  }
+}
+
 
 export const loginUser = async (request, response) => {
   const userCredentials = request.body
+  console.log('Login request received', userCredentials);
   try {
     const user = await User.findOne(userCredentials)
     if (user) {
       console.log('Access Granted', user);
       response.status(200).json({ message: 'Access Granted', details: user })
+    } else if (!user) {
+      response.status(404).json({ message: 'Wrong Credentials' })
     }
   } catch (error) {
-    response.status(400).json({ message: error })
+    response.status(400).json({ message: `Error from try-catch in backend ${error}` })
   }
 }
 
@@ -146,7 +194,7 @@ export const resetPassword = async (request, response) => {
 export const changePassword_ResetMode = async (request, response) => {
 
   console.log('Reset password reached', request);
-  
+
 
   try {
     const user = await User.findOne({ email: request.body.email })
