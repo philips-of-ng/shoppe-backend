@@ -69,6 +69,8 @@ export const createUser = async (request, response) => {
   }
 };
 
+
+//LOGIN WITH LOGIN CODE --- IN PROGRESS...
 const sendLoginCode = async (request, response) => {
   const userCredentials = request.body
 
