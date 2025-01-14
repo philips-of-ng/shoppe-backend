@@ -7,11 +7,12 @@ import cors from 'cors'
 import cloudinary from 'cloudinary'
 
 import userRoutes from './routes/UserRoutes.js'
+import fileRoutes from './routes/fileUploadRoutes.js'
 
 cloudinary.v2.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: CLOUDINARY_API_KEY,
-  api_secret: CLOUDINARY_API_SECRET
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 })
 
 // Resolve __dirname in ES Modules
@@ -45,6 +46,7 @@ if (!mongoUri) {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // For form-encoded data
 app.use('/api/users', userRoutes)
+app.use('/api/files', fileRoutes)
 
 // Connect to MongoDB
 mongoose
