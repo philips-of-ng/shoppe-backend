@@ -1,8 +1,12 @@
-import { request, response } from 'express';
 import User from '../models/UserModel.js'
 import userSchema from '../validations/UserValidation.js'
-
+import cloudinary from 'cloudinary'
+const useCloudinary = cloudinary.v2
+import multer from 'multer'
+import path from 'path'
 import nodemailer from 'nodemailer'
+import fs from 'fs'
+import { response } from 'express'
 
 //GETS AN ARRAY OF ALL USERS
 export const getUsers = async (request, response) => {
@@ -68,6 +72,21 @@ export const createUser = async (request, response) => {
     response.status(400).json({ message: 'Error creating user', error: error.message });
   }
 };
+
+ export const uploadDisplayPicture = async (request,) => {
+  try {
+    const result = await useCloudinary.uploader.upload(request.filte.path, {
+      folder: 'shoppe-users-dp'
+    })
+
+    fs.unlinkSync(request.file.path)
+
+    response.json({ imageUrl: result.secure_url })
+  } catch (error) {
+    response.status(500).send(error.message)
+  }
+}
+
 
 
 //LOGIN WITH LOGIN CODE --- IN PROGRESS...
@@ -219,3 +238,5 @@ export const changePassword_ResetMode = async (request, response) => {
   }
 
 }
+
+

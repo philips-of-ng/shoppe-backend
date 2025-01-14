@@ -4,8 +4,15 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import cors from 'cors'
+import cloudinary from 'cloudinary'
 
 import userRoutes from './routes/UserRoutes.js'
+
+cloudinary.v2.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: CLOUDINARY_API_KEY,
+  api_secret: CLOUDINARY_API_SECRET
+})
 
 // Resolve __dirname in ES Modules
 const __filename = fileURLToPath(import.meta.url);
