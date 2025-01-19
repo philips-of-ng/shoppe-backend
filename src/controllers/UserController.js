@@ -7,6 +7,8 @@ import path from 'path'
 import nodemailer from 'nodemailer'
 import fs from 'fs'
 import { response } from 'express'
+import { hashPassword, comparePasswords } from '../Middlewares/PasswordManager.js'
+import { argon2d } from 'argon2'
 
 export const upload = multer({ dest: 'uploads/' }).single('image')
 
@@ -66,8 +68,13 @@ export const createUser = async (request, response) => {
       .json({ message: `Validation error: ${error.details[0].message}` });
   }
 
+  const plainPassword = request.body.password
+
+  const hashedPassword = await hashPassword(plainPassword)
+
   try {
-    const newUser = await User.create(request.body);
+    const { firstName, lastName, fullName, email, displayPicture } = request.body
+    const newUser = await User.create({ firstName, lastName, fullName, email, displayPicture, password: hashedPassword });
     console.log('User created successfully:', newUser);
     response.status(201).json({ message: 'User created successfully', userDetails: newUser });
   } catch (error) {
@@ -82,7 +89,7 @@ const sendLoginCode = async (request, response) => {
   const userCredentials = request.body
 
   try {
-    const user = await User.findOne(userCredentials)
+    const user = await User.findOne({ email: userCredentials.email })
     if (user) {
       const email = request.body.email
       const otp = Math.floor(100000 + Math.random() + 900000).toString()
@@ -124,15 +131,28 @@ const sendLoginCode = async (request, response) => {
 
 
 export const loginUser = async (request, response) => {
+
   const userCredentials = request.body
   console.log('Login request received', userCredentials);
   try {
-    const user = await User.findOne(userCredentials)
-    if (user) {
+    const user = await User.findOne({ email: userCredentials.email })
+
+    console.log("User found", user);
+    
+
+    //COMPARING OF THE PASSWORD SHOULD TAKE PLACE HERE
+    const plainPassword = request.body.password
+    const hashedPassword = user.password
+
+    const pwMatched = await comparePasswords(plainPassword, hashedPassword)
+
+    if (user && pwMatched) {
       console.log('Access Granted', user);
       response.status(200).json({ message: 'Access Granted', details: user })
     } else if (!user) {
       response.status(404).json({ message: 'Wrong Credentials' })
+    } else if (!pwMatched) {
+      response.status(500).json({ message: 'wrong password' })
     }
   } catch (error) {
     response.status(400).json({ message: `Error from try-catch in backend ${error}` })
@@ -208,11 +228,13 @@ export const changePassword_ResetMode = async (request, response) => {
   try {
     const user = await User.findOne({ email: request.body.email })
 
+    const hashedNewPassword = await hashPassword(request.body.newPassword)
+
     if (user) {
       console.log('User found:', user);
 
       const filter = { email: request.body.email }
-      const update = { password: request.body.newPassword }
+      const update = { password: hashedNewPassword }
       const options = { new: true, runValidators: true }
 
       const updatedUser = await User.findOneAndUpdate(filter, update, options)
