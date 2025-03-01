@@ -44,7 +44,7 @@ if (!mongoUri) {
 }
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // For form-encoded data
+app.use(express.urlencoded({ extended: true })); 
 
 //PATH AND ENDPOINT CONFIG
 app.use('/api/users', userRoutes)

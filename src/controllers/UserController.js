@@ -6,7 +6,7 @@ import multer from 'multer'
 import path from 'path'
 import nodemailer from 'nodemailer'
 import fs from 'fs'
-import { response } from 'express'
+
 import { hashPassword, comparePasswords } from '../Middlewares/PasswordManager.js'
 import { argon2d } from 'argon2'
 
